@@ -1,37 +1,65 @@
-"import axios from \"axios\";
+// app/frontend/src/lib/api.js
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+// IMPORTANT: Once deployed to Railway, change this to your Railway URL
+// e.g., const API_BASE_URL = "https://your-app-name.up.railway.app/api";
+const API_BASE_URL = "http://localhost:8000/api"; 
 
-export const http = axios.create({
-  baseURL: API,
-  headers: { \"Content-Type\": \"application/json\" },
-});
-
-// Attach token dynamically
-export const setAuthToken = (token) => {
-  if (token) {
-    http.defaults.headers.common[\"Authorization\"] = `Bearer ${token}`;
-  } else {
-    delete http.defaults.headers.common[\"Authorization\"];
-  }
+// Helper function to get the token from local storage
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    "Authorization": token ? `Bearer ${token}` : ""
+  };
 };
 
-// ============ API helpers ============
-export const apiLogin = (username, password, role) =>
-  http.post(\"/auth/login\", { username, password, role }).then((r) => r.data);
+export const loginUser = async (username, password) => {
+  const formData = new URLSearchParams();
+  formData.append("username", username);
+  formData.append("password", password);
 
-export const apiListProjects = () =>
-  http.get(\"/projects\").then((r) => r.data);
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData,
+  });
+  
+  if (!response.ok) throw new Error("Invalid credentials");
+  return await response.json();
+};
 
-export const apiCreateProject = (payload) =>
-  http.post(\"/projects\", payload).then((r) => r.data);
+export const fetchProjects = async () => {
+  const response = await fetch(`${API_BASE_URL}/projects`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch projects");
+  return await response.json();
+};
 
-export const apiListTasks = () => http.get(\"/tasks\").then((r) => r.data);
+export const fetchTasks = async () => {
+  const response = await fetch(`${API_BASE_URL}/tasks`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch tasks");
+  return await response.json();
+};
 
-export const apiCreateTask = (payload) =>
-  http.post(\"/tasks\", payload).then((r) => r.data);
+export const updateTaskStatus = async (taskId, status) => {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error("Failed to update task");
+  return await response.json();
+};
 
-export const apiUpdateTaskStatus = (id, status) =>
-  http.patch(`/tasks/${id}`, { status }).then((r) => r.data);
-"
+export const createTask = async (taskData) => {
+  const response = await fetch(`${API_BASE_URL}/tasks`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(taskData),
+  });
+  if (!response.ok) throw new Error("Failed to create task");
+  return await response.json();
+};
