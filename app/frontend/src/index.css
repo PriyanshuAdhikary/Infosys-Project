@@ -1,4 +1,4 @@
-"@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -14,7 +14,7 @@ body,
 
 body {
   margin: 0;
-  font-family: \"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #020617;
@@ -23,11 +23,11 @@ body {
 
 code,
 .font-mono {
-  font-family: \"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .font-display {
-  font-family: \"Manrope\", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -110,13 +110,12 @@ code,
 
 /* Grain overlay */
 .grain::before {
-  content: \"\";
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   z-index: 0;
   opacity: 0.35;
   mix-blend-mode: overlay;
 }
-"

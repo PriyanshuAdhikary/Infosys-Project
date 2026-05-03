@@ -1,16 +1,19 @@
-// app/frontend/src/lib/api.js
+const API_BASE_URL = "https://infosys-project-production.up.railway.app/api";
 
-// IMPORTANT: Once deployed to Railway, change this to your Railway URL
-// e.g., const API_BASE_URL = "https://your-app-name.up.railway.app/api";
-const API_BASE_URL = "http://localhost:8000/api"; 
-
-// Helper function to get the token from local storage
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
     "Content-Type": "application/json",
     "Authorization": token ? `Bearer ${token}` : ""
   };
+};
+
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem("token", token);
+  } else {
+    localStorage.removeItem("token");
+  }
 };
 
 export const loginUser = async (username, password) => {
@@ -24,22 +27,31 @@ export const loginUser = async (username, password) => {
     body: formData,
   });
   
-  if (!response.ok) throw new Error("Invalid credentials");
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Invalid credentials");
+  }
   return await response.json();
 };
 
 export const fetchProjects = async () => {
-  const response = await fetch(`${API_BASE_URL}/projects`, {
-    headers: getAuthHeaders(),
-  });
+  const response = await fetch(`${API_BASE_URL}/projects`, { headers: getAuthHeaders() });
   if (!response.ok) throw new Error("Failed to fetch projects");
   return await response.json();
 };
 
-export const fetchTasks = async () => {
-  const response = await fetch(`${API_BASE_URL}/tasks`, {
+export const createProject = async (projectData) => {
+  const response = await fetch(`${API_BASE_URL}/projects`, {
+    method: "POST",
     headers: getAuthHeaders(),
+    body: JSON.stringify(projectData),
   });
+  if (!response.ok) throw new Error("Failed to create project");
+  return await response.json();
+};
+
+export const fetchTasks = async () => {
+  const response = await fetch(`${API_BASE_URL}/tasks`, { headers: getAuthHeaders() });
   if (!response.ok) throw new Error("Failed to fetch tasks");
   return await response.json();
 };
