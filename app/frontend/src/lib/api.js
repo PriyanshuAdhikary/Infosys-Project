@@ -1,5 +1,4 @@
 const API_BASE_URL = "https://infosys-project-production.up.railway.app/api";
-
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
