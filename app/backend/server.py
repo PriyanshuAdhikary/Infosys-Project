@@ -1,0 +1,225 @@
+"from fastapi import FastAPI, APIRouter, HTTPException
+from dotenv import load_dotenv
+from starlette.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
+import logging
+from pathlib import Path
+from pydantic import BaseModel, Field
+from typing import List, Literal, Optional
+import uuid
+from datetime import datetime, timezone, timedelta
+
+
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
+mongo_url = os.environ['MONGO_URL']
+client = AsyncIOMotorClient(mongo_url)
+db = client[os.environ['DB_NAME']]
+
+app = FastAPI()
+api_router = APIRouter(prefix=\"/api\")
+
+
+# ============ Models ============
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    role: Literal['Admin', 'Member'] = 'Member'
+
+
+class LoginResponse(BaseModel):
+    token: str
+    username: str
+    role: Literal['Admin', 'Member']
+
+
+class Project(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    color: str = \"indigo\"
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    color: Optional[str] = \"indigo\"
+
+
+class Task(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: Optional[str] = \"\"
+    project_id: str
+    project_name: str
+    assigned_to: str
+    assignee_avatar: Optional[str] = \"\"
+    due_date: str
+    status: Literal['Pending', 'In Progress', 'Completed'] = 'Pending'
+    priority: Literal['Low', 'Medium', 'High'] = 'Medium'
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class TaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = \"\"
+    project_id: str
+    assigned_to: str
+    assignee_avatar: Optional[str] = \"\"
+    due_date: str
+    priority: Optional[Literal['Low', 'Medium', 'High']] = 'Medium'
+
+
+class TaskStatusUpdate(BaseModel):
+    status: Literal['Pending', 'In Progress', 'Completed']
+
+
+# ============ Routes ============
+@api_router.get(\"/\")
+async def root():
+    return {\"message\": \"TaskSync API\"}
+
+
+@api_router.post(\"/auth/login\", response_model=LoginResponse)
+async def login(req: LoginRequest):
+    if not req.username or not req.password:
+        raise HTTPException(status_code=400, detail=\"Username and password required\")
+    # Mock auth: any credentials accepted; role chosen by client
+    token = f\"mock-{uuid.uuid4()}\"
+    return LoginResponse(token=token, username=req.username, role=req.role)
+
+
+@api_router.get(\"/projects\", response_model=List[Project])
+async def list_projects():
+    projects = await db.projects.find({}, {\"_id\": 0}).to_list(500)
+    return projects
+
+
+@api_router.post(\"/projects\", response_model=Project)
+async def create_project(payload: ProjectCreate):
+    project = Project(name=payload.name, color=payload.color or \"indigo\")
+    await db.projects.insert_one(project.model_dump())
+    return project
+
+
+@api_router.get(\"/tasks\", response_model=List[Task])
+async def list_tasks():
+    tasks = await db.tasks.find({}, {\"_id\": 0}).to_list(1000)
+    return tasks
+
+
+@api_router.post(\"/tasks\", response_model=Task)
+async def create_task(payload: TaskCreate):
+    project = await db.projects.find_one({\"id\": payload.project_id}, {\"_id\": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail=\"Project not found\")
+    task = Task(
+        title=payload.title,
+        description=payload.description or \"\",
+        project_id=payload.project_id,
+        project_name=project[\"name\"],
+        assigned_to=payload.assigned_to,
+        assignee_avatar=payload.assignee_avatar or \"\",
+        due_date=payload.due_date,
+        priority=payload.priority or \"Medium\",
+    )
+    await db.tasks.insert_one(task.model_dump())
+    return task
+
+
+@api_router.patch(\"/tasks/{task_id}\", response_model=Task)
+async def update_task_status(task_id: str, payload: TaskStatusUpdate):
+    result = await db.tasks.update_one(
+        {\"id\": task_id}, {\"$set\": {\"status\": payload.status}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail=\"Task not found\")
+    task = await db.tasks.find_one({\"id\": task_id}, {\"_id\": 0})
+    return task
+
+
+@api_router.delete(\"/tasks/{task_id}\")
+async def delete_task(task_id: str):
+    result = await db.tasks.delete_one({\"id\": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=\"Task not found\")
+    return {\"ok\": True}
+
+
+# ============ Seed ============
+@app.on_event(\"startup\")
+async def seed_data():
+    try:
+        projects_count = await db.projects.count_documents({})
+        if projects_count == 0:
+            seeds = [
+                Project(name=\"Atlas Web Platform\", color=\"indigo\"),
+                Project(name=\"Orion Mobile App\", color=\"emerald\"),
+                Project(name=\"Helios Dashboard\", color=\"amber\"),
+            ]
+            await db.projects.insert_many([p.model_dump() for p in seeds])
+
+        tasks_count = await db.tasks.count_documents({})
+        if tasks_count == 0:
+            projects = await db.projects.find({}, {\"_id\": 0}).to_list(10)
+            by_name = {p[\"name\"]: p for p in projects}
+            now = datetime.now(timezone.utc)
+
+            def due(days):
+                return (now + timedelta(days=days)).date().isoformat()
+
+            avatars = [
+                \"https://images.unsplash.com/photo-1768247695726-022586dea3a1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGF2YXRhciUyMGhlYWRzaG90fGVufDB8fHx8MTc3NzgwMTIyMHww&ixlib=rb-4.1.0&q=85\",
+                \"https://images.unsplash.com/photo-1609371497456-3a55a205d5eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGF2YXRhciUyMGhlYWRzaG90fGVufDB8fHx8MTc3NzgwMTIyMHww&ixlib=rb-4.1.0&q=85\",
+                \"https://images.pexels.com/photos/14589344/pexels-photo-14589344.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940\",
+            ]
+
+            seed_tasks = [
+                (\"Design onboarding flow\", \"Atlas Web Platform\", \"Maya Chen\", avatars[0], due(2), \"Pending\", \"High\"),
+                (\"Implement OAuth provider\", \"Atlas Web Platform\", \"Diego Rivera\", avatars[2], due(5), \"In Progress\", \"High\"),
+                (\"Write API documentation\", \"Atlas Web Platform\", \"Priya Nair\", avatars[1], due(7), \"Pending\", \"Medium\"),
+                (\"Refactor push notifications\", \"Orion Mobile App\", \"Diego Rivera\", avatars[2], due(-1), \"In Progress\", \"High\"),
+                (\"Add offline sync\", \"Orion Mobile App\", \"Maya Chen\", avatars[0], due(10), \"Pending\", \"Medium\"),
+                (\"Ship analytics charts\", \"Helios Dashboard\", \"Priya Nair\", avatars[1], due(3), \"Completed\", \"Low\"),
+                (\"Build export CSV feature\", \"Helios Dashboard\", \"Maya Chen\", avatars[0], due(4), \"Completed\", \"Medium\"),
+                (\"Optimize dashboard load time\", \"Helios Dashboard\", \"Diego Rivera\", avatars[2], due(8), \"In Progress\", \"High\"),
+            ]
+            tasks = []
+            for title, proj_name, assignee, avatar, d, status, priority in seed_tasks:
+                proj = by_name[proj_name]
+                tasks.append(
+                    Task(
+                        title=title,
+                        project_id=proj[\"id\"],
+                        project_name=proj[\"name\"],
+                        assigned_to=assignee,
+                        assignee_avatar=avatar,
+                        due_date=d,
+                        status=status,
+                        priority=priority,
+                    ).model_dump()
+                )
+            await db.tasks.insert_many(tasks)
+    except Exception as e:
+        logging.exception(\"Seeding failed: %s\", e)
+
+
+app.include_router(api_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=[\"*\"],
+    allow_headers=[\"*\"],
+)
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
+@app.on_event(\"shutdown\")
+async def shutdown_db_client():
+    client.close()
+"

@@ -1,0 +1,121 @@
+{
+  "project_name": "TaskSync",
+  "theme": "dark",
+  "archetype": "Electric & Neon / Jewel & Luxury Hybrid (Premium SaaS)",
+  "typography": {
+    "fonts": {
+      "heading": "Manrope, sans-serif",
+      "body": "Plus Jakarta Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-extrabold",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-semibold",
+      "body": "text-base font-medium leading-relaxed",
+      "small": "text-sm font-medium",
+      "label": "text-xs uppercase tracking-[0.2em] font-bold"
+    }
+  },
+  "colors": {
+    "background": {
+      "main": "bg-slate-950",
+      "surface": "bg-slate-900",
+      "glass": "bg-slate-900/40"
+    },
+    "text": {
+      "primary": "text-slate-50",
+      "secondary": "text-slate-400",
+      "muted": "text-slate-500",
+      "inverse": "text-slate-950"
+    },
+    "border": {
+      "subtle": "border-slate-800",
+      "glass": "border-white/10",
+      "focus": "focus:border-indigo-500"
+    },
+    "accent": {
+      "indigo": {
+        "main": "bg-indigo-500",
+        "hover": "hover:bg-indigo-400",
+        "text": "text-indigo-400",
+        "glow": "shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+      },
+      "emerald": {
+        "main": "bg-emerald-500",
+        "hover": "hover:bg-emerald-400",
+        "text": "text-emerald-400",
+        "glow": "shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+      }
+    },
+    "status": {
+      "pending": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+      "in_progress": "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+      "completed": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+    }
+  },
+  "spacing_and_layout": {
+    "global_padding": "p-6 sm:p-8 md:p-12",
+    "glass_container_padding": "p-8",
+    "kanban_board": {
+      "grid": "grid grid-cols-1 lg:grid-cols-3 gap-6",
+      "column": "flex flex-col gap-4 h-full min-h-[500px] p-4 bg-slate-900/30 rounded-2xl border border-slate-800/50"
+    },
+    "alignment": "Left-align dense text and lists. Center-align login card and empty states."
+  },
+  "motion_and_interactions": {
+    "page_transition": {
+      "initial": { "opacity": 0, "y": 20 },
+      "animate": { "opacity": 1, "y": 0 },
+      "exit": { "opacity": 0, "y": -20 },
+      "transition": { "duration": 0.4, "ease": "easeOut" }
+    },
+    "staggered_entrance": {
+      "container": { "hidden": { "opacity": 0 }, "show": { "opacity": 1, "transition": { "staggerChildren": 0.1 } } },
+      "item": { "hidden": { "opacity": 0, "y": 20 }, "show": { "opacity": 1, "y": 0 } }
+    },
+    "hover_states": {
+      "task_card": "hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:border-indigo-500/30 transition-all duration-300",
+      "button": "hover:scale-[1.02] active:scale-[0.98] transition-transform"
+    }
+  },
+  "components": {
+    "glass_card": "bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-2xl",
+    "role_badge": "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
+    "primary_button": "w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg shadow-indigo-500/25",
+    "input_field": "w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-3 text-slate-50 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all",
+    "task_card": "bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5 cursor-grab active:cursor-grabbing flex flex-col gap-3"
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure minimum 4.5:1 ratio for text. Use focus:ring-2 for keyboard navigation.",
+    "testing_attributes": "All interactive elements MUST include data-testid. Examples: data-testid='login-button', data-testid='task-card-123', data-testid='kanban-column-pending'."
+  },
+  "image_urls": {
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1768247695726-022586dea3a1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGF2YXRhciUyMGhlYWRzaG90fGVufDB8fHx8MTc3NzgwMTIyMHww&ixlib=rb-4.1.0&q=85",
+        "category": "user_avatar",
+        "description": "Avatar for female user/assignee"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1609371497456-3a55a205d5eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGF2YXRhciUyMGhlYWRzaG90fGVufDB8fHx8MTc3NzgwMTIyMHww&ixlib=rb-4.1.0&q=85",
+        "category": "user_avatar",
+        "description": "Avatar for team member"
+      },
+      {
+        "url": "https://images.pexels.com/photos/14589344/pexels-photo-14589344.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "user_avatar",
+        "description": "Avatar for male user/assignee"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build the React application using Tailwind CSS, Framer Motion, and Lucide React icons.",
+    "Do not use generic fonts for headings (avoid Inter/Roboto). Use the specified typography (Manrope / Plus Jakarta Sans).",
+    "Use @hello-pangea/dnd or dnd-kit for Kanban drag-and-drop functionality.",
+    "Implement the 'Glass Card' component exactly as specified using backdrop-blur-xl and border-white/10.",
+    "For the login screen background, use a pure CSS radial gradient over bg-slate-950 to create subtle indigo and emerald glowing orbs using absolute positioned divs with heavy blur.",
+    "Ensure the layout strictly follows the 'kanban_board' grid constraints.",
+    "Ensure 'data-testid' is present on all actionable items and drag zones."
+  ]
+}
